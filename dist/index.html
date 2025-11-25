@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Apple PWA App</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23000'/></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #0051D5 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .status.offline {
+            background: rgba(239, 68, 68, 0.2);
+        }
+    </style>
+<link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🍎 Apple PWA</h1>
+            <p>Progressive Web App com Design Pattern Apple e Glassmorphism</p>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="installPWA()">📲 Instalar App</button>
+                <button class="btn-secondary" onclick="checkStatus()">✅ Verificar Status</button>
+            </div>
+
+            <div id="status" class="status">
+                🟢 Online - Pronto para usar
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('offline', () => {
+            document.getElementById('status').innerHTML = '🔴 Offline - Funciona em modo offline';
+            document.getElementById('status').classList.add('offline');
+        });
+
+        window.addEventListener('online', () => {
+            document.getElementById('status').innerHTML = '🟢 Online - Pronto para usar';
+            document.getElementById('status').classList.remove('offline');
+        });
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        alert('✅ PWA instalada com sucesso!');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                alert('📱 PWA já está instalada ou seu navegador não suporta');
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                alert(`✅ Servidor: ${data.status}\nUptime: ${data.uptime.toFixed(2)}s`);
+            } catch (e) {
+                alert('❌ Servidor indisponível');
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then(reg => {
+                console.log('✅ Service Worker registrado', reg);
+            }).catch(err => {
+                console.log('Service Worker error:', err);
+            });
+        }
+    </script>
+</body>
+</html>
